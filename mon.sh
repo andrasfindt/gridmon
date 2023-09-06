@@ -17,14 +17,19 @@ do
 			|> aggregateWindow(every: 2m, fn: last, createEmpty: false)
 			|> yield(name: "last")' \
 				--silent | column -t -s, | tail -n1 | awk '{print $6}')
-	if [[ ${alert_state} != ${state} ]]; then
+	if [[ ${alert_state} != "${state}" ]]; then
 		text=''
 		if [[ ${state} == "1" ]]; then
 			text=connected	
 		else 
 			text=disconnected
 		fi
-		say "Grid ${text}" &
+		if command -v /usr/bin/osascript &> /dev/null; then
+			osascript -e "display notification \"Grid ${text}\" with title \"gridmon\" subtitle \"alert\""
+		fi
+		if [[ ${say} == "true" ]]; then
+			say "Grid ${text}" &
+		fi
 		echo "state_change: ${text}!"
 		alert_state=${state}
 	fi	
